@@ -177,7 +177,7 @@ class GFN_decoder(tf.keras.Model):
 
 class GFN_autoencoder(tf.keras.Model):
 
-    def __init__(self, input_type, input_shape, latent_dim):
+    def __init__(self, input_type, input_shape, latent_dim, factor_type):
         super(GFN_autoencoder, self).__init__(name='GFN_autoencoder')
         """
         input_type = ['image', 'image'], ['image', 'posture'], ['posture', 'posture']
@@ -185,15 +185,11 @@ class GFN_autoencoder(tf.keras.Model):
         self.input_type = input_type
         self.input_shape = input_shape
         self.latent_dim  = latent_dim
+        self.factor_type = factor_type
 
-        self.encoder = GFN_encoder(self.input_type, self.input_shape, self.latent_dim)
-        self.decoder = GFN_decoder(self.input_type, self.input_shape, self.latent_dim)
+        self.encoder = GFN_encoder(self.input_type, self.input_shape, self.latent_dim, self.factor_type)
+        self.decoder = GFN_decoder(self.input_type, self.input_shape, self.latent_dim, self.factor_type)
 
-    def call():
-        return
-
-    def train():
-        return
-
-    def test():
-        return
+    def call(self, inputs):
+        x = self.encoder(inputs)
+        return self.decoder(x)
