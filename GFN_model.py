@@ -15,15 +15,15 @@ from tensorflow.keras import layers
 
 class GFN_encoder(tf.keras.Model):
 
-    def __init__(self, input_type, input_shape, latent_dim, factor_type = ['dense']):
+    def __init__(self, input_type = ['image', 'image'], input_shape = (1,128,128) , latent_dim = 32, factor_type = ['dense']):
         super(GFN_encoder, self).__init__(name ='GFN_encoder')
 
         self.input_type = input_type
-        self.input_shape = input_shape
+        self.__dict__['dtype'] = tf.float32
         self.latent_dim = latent_dim
         self.factor_type = factor_type
 
-        self.inputlayer = layers.Input(shape = self.input_shape, name = 'enc_in_img_pos')
+        #self.inputlayer = layers.Input(shape = input_shape, name = 'enc_in_img_pos')
 
         if (('posture' in self.input_type ) and ('image' in self.input_type)):
             self.xlayer = layers.Lambda(lambda x: x[:,0,:,:])
@@ -34,8 +34,8 @@ class GFN_encoder(tf.keras.Model):
             self.ylayer = layers.Lambda(lambda x: x[:,1,:])
 
         else:
-            self.xlayer = layers.Lambda(lambda x: x[:,0,:,:])
-            self.ylayer = layers.Lambda(lambda x: x[:,1,:,:])
+            self.xlayer = layers.Lambda(lambda x: x[:,0,:,:],  input_shape = input_shape)
+            self.ylayer = layers.Lambda(lambda x: x[:,1,:,:],  input_shape = input_shape)
 
         self.xflatten = layers.Flatten()
         self.yflatten = layers.Flatten()
@@ -102,15 +102,15 @@ class GFN_encoder(tf.keras.Model):
 
 class GFN_decoder(tf.keras.Model):
 
-    def __init__(self, input_type, input_shape, latent_dim, factor_type = ['dense']):
+    def __init__(self, input_type = ['image', 'image'], input_shape = (1,128,128) , latent_dim = 32, factor_type = ['dense']):
         super(GFN_decoder, self).__init__(name='GFN_decoder')
 
         self.input_type = input_type
-        self.input_shape = input_shape
+        self.in_shape = input_shape
         self.latent_dim = latent_dim
         self.factor_type = factor_type
 
-        self.inputlayer = layers.Input(shape = self.input_shape, name = 'enc_in_img_pos')
+        #self.inputlayer = layers.Input(shape = self.in_shape, name = 'enc_in_img_pos')
 
         self.xlayer = layers.Lambda(lambda x: x[:,:,:self.latent_dim])
         self.hlayer = layers.Lambda(lambda x: x[:,:,self.latent_dim:])
@@ -141,10 +141,10 @@ class GFN_decoder(tf.keras.Model):
             self.ylayer_3 = layers.Dense(self.latent_dim, activation='relu')
 
         if (('posture' in self.input_type) and ( not ('image' in self.input_type))):
-            self.yrecon = layers.Reshape((1, self.input_shape[1],))
+            self.yrecon = layers.Reshape((1, self.in_shape[1],))
 
         else:
-            self.yrecon = layers.Reshape((1, self.input_shape[1]*self.input_shape[1],))
+            self.yrecon = layers.Reshape((1, self.in_shape[1]*self.in_shape[1],))
 
     def call(self, inputs):
 
@@ -172,23 +172,23 @@ class GFN_decoder(tf.keras.Model):
         fy = self.ylayer_2(fy)
         fy = self.ylayer_3(fy)
 
-        return fy = self.yrecon(fy)
+        return self.yrecon(fy)
 
 
 class GFN_autoencoder(tf.keras.Model):
 
-    def __init__(self, input_type, input_shape, latent_dim, factor_type):
+    def __init__(self, input_type = ['image', 'image'], input_shape = (1,128,128) , latent_dim = 32, factor_type = ['dense']):
         super(GFN_autoencoder, self).__init__(name='GFN_autoencoder')
         """
         input_type = ['image', 'image'], ['image', 'posture'], ['posture', 'posture']
         """
         self.input_type = input_type
-        self.input_shape = input_shape
+        self.in_shape = input_shape
         self.latent_dim  = latent_dim
         self.factor_type = factor_type
 
-        self.encoder = GFN_encoder(self.input_type, self.input_shape, self.latent_dim, self.factor_type)
-        self.decoder = GFN_decoder(self.input_type, self.input_shape, self.latent_dim, self.factor_type)
+        self.encoder = GFN_encoder(self.input_type, self.in_shape, self.latent_dim, self.factor_type)
+        self.decoder = GFN_decoder(self.input_type, self.in_shape, self.latent_dim, self.factor_type)
 
     def call(self, inputs):
         x = self.encoder(inputs)
