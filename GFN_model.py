@@ -15,7 +15,7 @@ from tensorflow.keras import layers
 
 class GFN_encoder(tf.keras.Model):
 
-    def __init__(self, input_type = ['image', 'image'], input_shape = (1,128,128) , latent_dim = 32, factor_type = ['dense']):
+    def __init__(self, input_type = 'image_image', input_shape = (1,128,128) , latent_dim = 32, factor_type = 'dense'):
         super(GFN_encoder, self).__init__(name ='GFN_encoder')
 
         self.input_type = input_type
@@ -29,9 +29,13 @@ class GFN_encoder(tf.keras.Model):
             self.xlayer = layers.Lambda(lambda x: x[:,0,:,:])
             self.ylayer = layers.Lambda(lambda x: x[:,1,:3,0])
 
-        if (('posture' in self.input_type) and ( not ('image' in self.input_type))):
+        elif (('posture' in self.input_type) and ( not ('image' in self.input_type))):
             self.xlayer = layers.Lambda(lambda x: x[:,0,:])
             self.ylayer = layers.Lambda(lambda x: x[:,1,:])
+
+        elif ('repr' in self.input_type):
+            self.xlayer = layers.Lambda(lambda x: x[:,0,:],  input_shape = input_shape)
+            self.ylayer = layers.Lambda(lambda x: x[:,1,:],  input_shape = input_shape)
 
         else:
             self.xlayer = layers.Lambda(lambda x: x[:,0,:,:],  input_shape = input_shape)
@@ -102,7 +106,7 @@ class GFN_encoder(tf.keras.Model):
 
 class GFN_decoder(tf.keras.Model):
 
-    def __init__(self, input_type = ['image', 'image'], input_shape = (1,128,128) , latent_dim = 32, factor_type = ['dense']):
+    def __init__(self, input_type = 'image_image', input_shape = (1,128,128) , latent_dim = 32, factor_type = ['dense']):
         super(GFN_decoder, self).__init__(name='GFN_decoder')
 
         self.input_type = input_type
@@ -177,10 +181,10 @@ class GFN_decoder(tf.keras.Model):
 
 class GFN_autoencoder(tf.keras.Model):
 
-    def __init__(self, input_type = ['image', 'image'], input_shape = (1,128,128) , latent_dim = 32, factor_type = ['dense']):
+    def __init__(self, input_type = ['image_image'], input_shape = (1,128,128) , latent_dim = 32, factor_type = ['dense']):
         super(GFN_autoencoder, self).__init__(name='GFN_autoencoder')
         """
-        input_type = ['image', 'image'], ['image', 'posture'], ['posture', 'posture']
+        input_type = 'image_image', 'repr_repr' , 'posture_posture', 'image_posture'
         """
         self.input_type = input_type
         self.in_shape = input_shape
